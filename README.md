@@ -1,2 +1,7 @@
 # MERN-iMessage-Clone
-iMessage clone built using MERN stack, personal learning project. 
+
+iMessage clone built w/ MongoDB, ExpressJS, ReactJS x REDUX, NodeJS.
+
+Live website:
+
+
