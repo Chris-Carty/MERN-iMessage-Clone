@@ -7,31 +7,46 @@ import SidebarChat from "./SidebarChat";
 import { useSelector } from "react-redux";
 import { selectUser } from "./features/userSlice";
 import db, { auth } from "./firebase";
+import axios from './axios'
 
 function Sidebar() {
   const user = useSelector(selectUser);
   const [chats, setChats] = useState([]);
 
+  const getChats = () => {
+    axios.get('/get/conversationList')
+    .then((res) => {
+      setChats(res.data)
+    })
+  }
+
   useEffect(() => {
-    db.collection("chats").onSnapshot((snapshot) =>
-      setChats(
-        snapshot.docs.map((doc) => ({
-          id: doc.id,
-          data: doc.data(),
-        }))
-      )
-    );
+    getChats()
   }, []);
 
-  const addChat = () => {
-    const chatName = prompt("Please enter a chat name");
+  const addChat = (e) => {
+    e.preventDefault()
 
-    if (chatName) {
-      db.collection("chats").add({
-        chatName: chatName,
-      });
+    const chatName = prompt('Please enter a chat name')
+    const firstMsg = prompt('Please send a welcome message')
+
+    if (chatName && firstMsg) {
+      let chatId = '';
+  
+      axios.post('/new/conversation', {
+        chatName: chatName
+      }).then((res)=>{
+        chatId = res.data._id
+      }).then(()=>{
+        axios.post(`/new/message?id=${chatId}`, {
+          message: firstMsg,
+          timestamp: Date.now(),
+          user: user
+        })
+      })
     }
-  };
+  }
+
 
   return (
     <div className="sidebar">
@@ -52,8 +67,8 @@ function Sidebar() {
       </div>
 
       <div className="sidebar__chats">
-        {chats.map(({ id, data: { chatName } }) => (
-          <SidebarChat key={id} id={id} chatName={chatName} />
+        {chats.map(({ id, name, timestamp}) => (
+          <SidebarChat key={id} id={id} chatName={name} timestamp={timestamp} />
         ))}
       </div>
     </div>
