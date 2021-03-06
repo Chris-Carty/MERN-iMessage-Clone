@@ -9,6 +9,7 @@ import Message from "./Message";
 import firebase from "firebase";
 import { selectUser } from "./features/userSlice";
 import FlipMove from "react-flip-move";
+import axios from './axios'
 
 function Chat() {
   const user = useSelector(selectUser);
@@ -17,37 +18,30 @@ function Chat() {
   const chatId = useSelector(selectChatId);
   const [messages, setMessages] = useState([]);
 
-  useEffect(() => {
+  const getConversation = (chatId) => {
     if (chatId) {
-      db.collection("chats")
-        .doc(chatId)
-        .collection("messages")
-        .orderBy("timestamp", "desc")
-        .onSnapshot((snapshot) =>
-          setMessages(
-            snapshot.docs.map((doc) => ({
-              id: doc.id,
-              data: doc.data(),
-            }))
-          )
-        );
+      axios.get(`/get/conversation?id=${chatId}`).then((res) => {
+        setMessages(res.data[0].conversation)
+      })
     }
+  }
+
+  useEffect(() => {
+    getConversation(chatId)
   }, [chatId]);
+
 
   const sendMessage = (e) => {
     e.preventDefault();
 
-    db.collection("chats").doc(chatId).collection("messages").add({
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    axios.post(`/new/message?id=${chatId}`, {
       message: input,
-      uid: user.uid,
-      photo: user.photo,
-      email: user.email,
-      displayName: user.displayName,
-    });
+      timestamp: Date.now(),
+      user: user
+    })
 
-    setInput("");
-  };
+    setInput("")
+  }
 
   return (
     <div className="chat">
