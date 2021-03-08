@@ -7,6 +7,11 @@ import db from "./firebase";
 import "./SidebarChat.css";
 import * as timeago from "timeago.js";
 import axios from './axios'
+import Pusher from 'pusher-js'
+
+var pusher = new Pusher('b87d6a577d4e94336676', {
+  cluster: 'us3'
+});
 
 function SidebarChat({ id, chatName }) {
   const dispatch = useDispatch();
@@ -28,6 +33,10 @@ function SidebarChat({ id, chatName }) {
     getSidebarElement()
 
     //realtime stuf....
+    const channel = pusher.subscribe('messages');
+    channel.bind('newMessage', function (data) {
+      getSidebarElement();
+    });
   }, [id]);
 
   return (
@@ -42,12 +51,12 @@ function SidebarChat({ id, chatName }) {
       }
       className="sidebarChat"
     >
-      <Avatar src={chatInfo[0]?.photo} />
+      <Avatar src={lastPhoto} />
       <div className="sidebarChat__info">
         <h3>{chatName}</h3>
-        <p>{chatInfo[0]?.message}</p>
+        <p>{lastMsg}</p>
         <small>
-          {timeago.format(new Date(chatInfo[0]?.timestamp?.toDate()))}
+          {new Date(parseInt(lastTimestamp)).toUTCString()}
         </small>
       </div>
     </div>

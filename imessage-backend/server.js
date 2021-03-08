@@ -1,13 +1,21 @@
 //import
 import express from 'express';
 import mongoose from 'mongoose';
-import pusher from 'pusher';
+import Pusher from 'pusher';
 import cors from 'cors';
 import mongoData from './mongoData.js'
 
 // app config
 const app = express();
 const port = process.env.PORT || 9000;
+
+const pusher = new Pusher({
+    appId: "1168122",
+    key: "b87d6a577d4e94336676",
+    secret: "247f8608af54a554ec07",
+    cluster: "us3",
+    useTLS: true
+  });
 
 //middlewares
 app.use(cors())
@@ -24,6 +32,22 @@ mongoose.connect(mongoURI, {
 
 mongoose.connection.once('open', () => {
     console.log('DB Connected')
+
+    const changeStream = mongoose.connection.collection('conversations').watch()
+
+    changeStream.on('change', (change) => {
+        if (change.operationType === 'insert') {
+            pusher.trigger('chats', 'newChat', {
+                'change' : change
+            }) 
+        } else if ( change.operationType === 'update') {
+                pusher.trigger('messages', 'newMessage', {
+                    'change' : change
+                })
+        } else {
+            console.log('Error triggering Pusher...')
+        }
+    })
 })
 
 // api routes

@@ -10,6 +10,11 @@ import firebase from "firebase";
 import { selectUser } from "./features/userSlice";
 import FlipMove from "react-flip-move";
 import axios from './axios'
+import Pusher from 'pusher-js'
+
+const pusher = new Pusher('b87d6a577d4e94336676', {
+  cluster: 'us3'
+});
 
 function Chat() {
   const user = useSelector(selectUser);
@@ -27,7 +32,16 @@ function Chat() {
   }
 
   useEffect(() => {
+
+    pusher.unsubscribe('messages')
+
     getConversation(chatId)
+
+    const channel = pusher.subscribe('messages');
+
+    channel.bind('newMessage', function (data) {
+      getConversation(chatId)
+    })
   }, [chatId]);
 
 
@@ -55,8 +69,8 @@ function Chat() {
       {/* chat messages */}
       <div className="chat__messages">
         <FlipMove>
-          {messages.map(({ id, data }) => (
-            <Message key={id} contents={data} />
+          {messages.map(({ user, _id, message, timestamp }) => (
+            <Message key={_id} id={_id} sender={user} message={message} timestamp={timestamp} />
           ))}
         </FlipMove>
       </div>

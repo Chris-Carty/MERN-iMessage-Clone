@@ -60,5 +60,9 @@
 }
 
 .chat__input > form > button {
-  display: none;
+  height: 0;
+  width: 0;
+  outline: transparent;
+  background: transparent;
+  border: none;
 }

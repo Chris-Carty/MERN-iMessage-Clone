@@ -8,6 +8,11 @@ import { useSelector } from "react-redux";
 import { selectUser } from "./features/userSlice";
 import db, { auth } from "./firebase";
 import axios from './axios'
+import Pusher from 'pusher-js'
+
+const pusher = new Pusher('b87d6a577d4e94336676', {
+  cluster: 'us3'
+});
 
 function Sidebar() {
   const user = useSelector(selectUser);
@@ -22,6 +27,12 @@ function Sidebar() {
 
   useEffect(() => {
     getChats()
+
+    const channel = pusher.subscribe('chats');
+
+    channel.bind('newChat', function (data) {
+      getChats()
+    })
   }, []);
 
   const addChat = (e) => {
